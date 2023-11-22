@@ -15,7 +15,7 @@ const authenticateToken = async (req, res, next) => {
     req.user = user;
 
     const groupId = user.family_group_id;
-    console.log(user.id, groupId);
+
     const results = await pool.query('SELECT 1 FROM family_users WHERE user_id = ? AND family_group_id = ?', [user.id, groupId]);
 
     if (results.length === 0) {

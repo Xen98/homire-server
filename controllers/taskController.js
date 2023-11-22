@@ -10,17 +10,36 @@ async function getTasks (req, res) {
   }
 }
 
+async function addTask (req, res) {
+  try {
+    const { title, description, categoryId, userId, date, finishHour, completed } = req.body;
+
+    const { id, avatarUrl } = await Task.addTask(req.user, {
+      title,
+      description,
+      categoryId,
+      userId,
+      date,
+      finishHour,
+      status: completed
+    });
+
+    res.json({ id, avatarUrl });
+  } catch (error) {
+    console.error('Error al agregar la tarea:', error);
+    res.status(500).json({ error: 'Error al agregar la tarea' });
+  }
+}
+
 async function updateTask (req, res) {
   try {
     const { id } = req.params;
-    const { title, description, category_id, date, finishHour, completed } = req.body;
-
-    console.log('Body: ', req.body);
+    const { title, description, categoryId, date, finishHour, completed } = req.body;
 
     const task = await Task.updateTask(req.user, id, {
       title,
       description,
-      category_id,
+      categoryId,
       date,
       finishHour,
       status: completed
@@ -62,6 +81,7 @@ async function deleteTask (req, res) {
 
 export default {
   getTasks,
+  addTask,
   toggleCompleted,
   updateTask,
   deleteTask

@@ -11,7 +11,7 @@ async function getTasks (user) {
       tasks.status, 
       tasks.end_date,
       tasks.finish_hour,
-      tasks.user_id, 
+      tasks.user_id,
       CONCAT("http://localhost:3000/uploads/profile_images/", users.profile_image) AS user_image
     FROM tasks
     INNER JOIN users ON tasks.user_id = users.id
@@ -23,8 +23,49 @@ async function getTasks (user) {
   return rows;
 }
 
-async function updateTask (user, id, { title, description, category_id, date, finishHour, status }) {
-  console.log('Fechas: ', date, finishHour);
+async function addTask (user, { title, description, categoryId, userId, date, finishHour, status }) {
+  const [result] = await pool.query(`
+    INSERT INTO tasks (
+      title, 
+      description, 
+      task_category_id, 
+      user_id,
+      group_id,
+      end_date, 
+      finish_hour, 
+      status, 
+      created_at
+    )
+    VALUES (
+      ?, 
+      ?, 
+      ?, 
+      ?, 
+      ?,
+      ?, 
+      ?, 
+      ?, 
+      NOW()
+    )
+  `, [title, description, categoryId, userId, user.family_group_id, date, finishHour, status]);
+
+  const [row] = await pool.query(`
+    SELECT 
+      CONCAT("http://localhost:3000/uploads/profile_images/", profile_image) AS avatarUrl
+    FROM users 
+    WHERE id = ?
+  `, [userId]);
+
+  const { avatarUrl } = row[0];
+  const id = result.insertId;
+
+  return {
+    id,
+    avatarUrl
+  };
+}
+
+async function updateTask (user, id, { title, description, categoryId, date, finishHour, status }) {
   const [rows] = await pool.query(`
     UPDATE tasks
     INNER JOIN family_users ON tasks.user_id = family_users.user_id
@@ -37,7 +78,7 @@ async function updateTask (user, id, { title, description, category_id, date, fi
       status = ?,
       updated_at = NOW()
     WHERE id = ? AND family_users.family_group_id = ?
-  `, [title, description, category_id, date, finishHour, status, id, user.family_group_id]);
+  `, [title, description, categoryId, date, finishHour, status, id, user.family_group_id]);
 
   return rows;
 }
@@ -56,12 +97,6 @@ async function toggleCompleted (user, id, status) {
 }
 
 async function deleteTask (user, id) {
-  // const [rows] = await pool.query(`
-  //   DELETE FROM tasks
-  //   INNER JOIN family_users ON tasks.user_id = family_users.user_id
-  //   WHERE tasks.id = ? AND family_users.family_group_id = ?
-  // `, [id, user.family_group_id]);
-
   const [rows] = await pool.query(`
     DELETE FROM tasks
     WHERE id = ? AND tasks.user_id IN (
@@ -76,6 +111,7 @@ async function deleteTask (user, id) {
 
 export default {
   getTasks,
+  addTask,
   toggleCompleted,
   updateTask,
   deleteTask

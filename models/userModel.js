@@ -8,14 +8,16 @@ async function getUser (id) {
 async function validateUser (id, password) {
   const [rows] = await pool.query(`
     SELECT 
-      id, 
-      username, 
-      name, 
-      email, 
-      profile_image,
-      family_users.family_group_id
+      users.id, 
+      users.username, 
+      users.name, 
+      users.email, 
+      users.profile_image,
+      family_users.family_group_id,
+      family_groups.name AS family_name
     FROM users 
     INNER JOIN family_users ON users.id = family_users.user_id
+    INNER JOIN family_groups ON family_groups.id = family_users.family_group_id
     WHERE username = ? AND pass= ?
   `, [id, password]);
 
