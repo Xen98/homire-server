@@ -11,8 +11,7 @@ async function getTasks (user) {
       tasks.status, 
       tasks.end_date,
       tasks.finish_hour,
-      tasks.user_id,
-      CONCAT("http://localhost:3000/uploads/profile_images/", users.profile_image) AS user_image
+      tasks.user_id
     FROM tasks
     INNER JOIN users ON tasks.user_id = users.id
     INNER JOIN task_categories ON tasks.task_category_id = task_categories.id
@@ -49,36 +48,28 @@ async function addTask (user, { title, description, categoryId, userId, date, fi
     )
   `, [title, description, categoryId, userId, user.family_group_id, date, finishHour, status]);
 
-  const [row] = await pool.query(`
-    SELECT 
-      CONCAT("http://localhost:3000/uploads/profile_images/", profile_image) AS avatarUrl
-    FROM users 
-    WHERE id = ?
-  `, [userId]);
-
-  const { avatarUrl } = row[0];
   const id = result.insertId;
 
   return {
-    id,
-    avatarUrl
+    id
   };
 }
 
-async function updateTask (user, id, { title, description, categoryId, date, finishHour, status }) {
+async function updateTask (user, id, { title, description, categoryId, userId, date, finishHour, status }) {
   const [rows] = await pool.query(`
     UPDATE tasks
     INNER JOIN family_users ON tasks.user_id = family_users.user_id
     SET 
-      title = ?, 
-      description = ?, 
-      task_category_id = ?, 
-      end_date = ?, 
-      finish_hour = ?, 
-      status = ?,
-      updated_at = NOW()
-    WHERE id = ? AND family_users.family_group_id = ?
-  `, [title, description, categoryId, date, finishHour, status, id, user.family_group_id]);
+      tasks.title = ?, 
+      tasks.description = ?, 
+      tasks.task_category_id = ?, 
+      tasks.user_id = ?,
+      tasks.end_date = ?, 
+      tasks.finish_hour = ?, 
+      tasks.status = ?,
+      tasks.updated_at = NOW()
+    WHERE tasks.id = ? AND family_users.family_group_id = ?
+  `, [title, description, categoryId, userId, date, finishHour, status, id, user.family_group_id]);
 
   return rows;
 }

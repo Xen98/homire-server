@@ -1,19 +1,19 @@
 import pool from '../config/database.js';
 
-async function getTasksCategories (user) {
+async function getBelongingsCategories (user) {
   const [rows] = await pool.query(`
-    SELECT DISTINCT task_categories.* 
-    FROM task_categories
-    INNER JOIN family_users ON family_users.family_group_id = task_categories.group_id
+    SELECT DISTINCT belonging_categories.* 
+    FROM belonging_categories
+    INNER JOIN family_users ON family_users.family_group_id = belonging_categories.group_id
     WHERE family_users.family_group_id = ?
   `, [user.family_group_id]);
 
   return rows;
 }
 
-async function createDefaultTasksCategories (groupId) {
+async function createDefaultBelongingsCategories (groupId) {
   const [rows] = await pool.query(`
-    INSERT INTO task_categories (
+    INSERT INTO belonging_categories (
       name,
       color,
       group_id,
@@ -21,13 +21,13 @@ async function createDefaultTasksCategories (groupId) {
       updated_at
     )
     VALUES (
-      'Limpieza', 
+      'Muebles', 
       '#6f9df1', 
-      ?, 
+      ?,
       NOW(),
       NOW()
     ), (
-      'Compras',
+      'Electrodomesticos',
       '#f97316',
       ?,
       NOW(),
@@ -39,6 +39,6 @@ async function createDefaultTasksCategories (groupId) {
 }
 
 export default {
-  getTasksCategories,
-  createDefaultTasksCategories
+  getBelongingsCategories,
+  createDefaultBelongingsCategories
 };

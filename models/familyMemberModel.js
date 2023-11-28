@@ -1,5 +1,7 @@
 import pool from '../config/database.js';
 
+import { generateFamilyCode } from '../helpers/familyCode.js';
+
 async function getFamilyMembers (user) {
   const [rows] = await pool.query(`
     SELECT 
@@ -18,6 +20,65 @@ async function getFamilyMembers (user) {
   return rows;
 }
 
+async function createFamilyGroup (userId, familyName) {
+  let familyCode;
+  let isValidCode;
+
+  do {
+    familyCode = generateFamilyCode(6);
+    isValidCode = !await existFamilyCode(familyCode);
+  } while (!isValidCode);
+
+  const [resultFamily] = await pool.query(`
+    INSERT INTO family_groups (
+      admin_id,
+      name,
+      family_code,
+      created_at,
+      updated_at
+    ) VALUES (
+      ?,
+      ?,
+      ?,
+      NOW(),
+      NOW()
+    )
+  `, [userId, familyName, familyCode]);
+
+  return resultFamily.insertId;
+}
+
+async function assignMemberToFamily (userId, familyId) {
+  await pool.query(`
+    INSERT INTO family_users (
+      user_id,
+      family_group_id
+    ) VALUES (
+      ?,
+      ?
+    )
+  `, [userId, familyId]);
+}
+
+async function existFamilyCode (code) {
+  const [rows] = await pool.query(`
+    SELECT * FROM family_groups WHERE family_code = ?
+  `, [code]);
+
+  return rows.length;
+}
+
+async function validateFamilyCode (code) {
+  const [rows] = await pool.query(`
+    SELECT * FROM family_groups WHERE family_code = ?
+  `, [code]);
+
+  return rows[0]?.id;
+}
+
 export default {
-  getFamilyMembers
+  getFamilyMembers,
+  assignMemberToFamily,
+  createFamilyGroup,
+  validateFamilyCode
 };

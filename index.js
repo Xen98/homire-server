@@ -9,6 +9,7 @@ import userRoutes from './routes/userRoutes.js';
 import familyMemberRoutes from './routes/familyMemberRoutes.js';
 import taskCategoryRoutes from './routes/taskCategoryRoutes.js';
 import belongingRoutes from './routes/belongingRoutes.js';
+import belongingCategoryRoutes from './routes/belongingCategoryRoutes.js';
 
 const app = express();
 
@@ -27,6 +28,8 @@ app.use('/users', authenticateToken, userRoutes);
 app.use('/family_members', authenticateToken, familyMemberRoutes);
 
 app.use('/belongings', authenticateToken, belongingRoutes);
+
+app.use('/belongings_categories', authenticateToken, belongingCategoryRoutes);
 
 app.use('/uploads', express.static('uploads'));
 
